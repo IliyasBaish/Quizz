@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../websocket-server"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "Quizz",
+		"liveServer.settings.port": 5501
+	}
+}
