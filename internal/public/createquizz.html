@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIScrabble</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body class="b3">
+    <div>
+        <p class="t5" style="font-size: 50px; margin-top: 80px;">Create Quizz</p>
+        <form onsubmit="event.preventDefault()" action="" id="quizz-form">
+            <input type="text" class="quizz-textinput" id="quizzName" name="roomname" class="b4" placeholder="Enter quizz name" style="margin-top: 20px;"/>
+            <p class="t5" style="font-size: 35px; margin-top: 30px;">Questions</p>
+            <div class="question-group-container" id="group-1-container">
+                <input name="group-name" id="group-1" type="text" class="quizz-textinput-group b4 quizz-input-question-group" placeholder="Questions Group 1">
+                <input id="group-1-question-1-score" type="number" class="quizz-textinput b4 quizz-input-score" placeholder="Score" name="score"><input id="group-1-question-1" type="text" class="quizz-textinput b4 quizz-input-question" placeholder="Question Text1" name="question"><input id="group-1-question-1-time" type="number" class="quizz-textinput b4 quizz-input-score" placeholder="Time[s]" name="time">
+                <button id="qroup-1-button" class="quizz-question-add" value="1 1" onclick="addQuestion(this)">Add Question</button>
+            </div>
+            <button id="qroup-add-button" class="quizz-group-add" value="1" onclick="addGroup(this)">Add Questions Group</button>
+            <button id="qroup-add-button" class="quizz-group-add" value="1" onclick="createQuizz()">Create Quizz</button>
+        </form>
+        <div id="link1" style="display: none;">{{.link1}}</div>
+        <div id="link2" style="display: none;">{{.link2}}</div>
+    </div>
+    <script>
+        function addQuestion(element){
+            data = element.value.split(" ")
+            console.log(data)
+            questionNum = parseInt(data[1])+1
+
+            score = document.createElement("input")
+            score.id = "group-"+data[0]+"-question-"+questionNum+"-score"
+            score.type = "number"
+            score.classList.add("quizz-textinput")
+            score.classList.add("b4")
+            score.classList.add("quizz-input-score")
+            score.placeholder = "Score"
+            score.name = "score"
+
+            question = document.createElement("input")
+            question.id = "group-"+data[0]+"-question-"+questionNum
+            question.type = "text"
+            question.classList.add("quizz-textinput")
+            question.classList.add("b4")
+            question.classList.add("quizz-input-question")
+            question.placeholder = "Question Text" + questionNum
+            question.name = "question"
+
+            time = document.createElement("input")
+            time.id = "group-"+data[0]+"-question-"+questionNum+"-time"
+            time.type = "number"
+            time.classList.add("quizz-textinput")
+            time.classList.add("b4")
+            time.classList.add("quizz-input-score")
+            time.placeholder = "Time[s]"
+            time.name = "time"
+
+            parent = document.getElementById("group-"+data[0]+"-container")
+            parent.insertBefore(score, element)
+            parent.insertBefore(question, element)
+            parent.insertBefore(time, element)
+
+            element.value = data[0]+" "+questionNum
+        }
+
+        function addGroup(element){
+            groupNum = parseInt(element.value) + 1
+            container = document.createElement("div")
+            container.classList.add("question-group-container")
+            container.id = "group-"+groupNum+"-container"
+            container.innerHTML = 
+            `
+                <input id="group-`+groupNum+`" type="text" class="quizz-textinput-group b4 quizz-input-question-group" placeholder="Questions Group 1" name="group-name"><input id="group-`+groupNum+`-question-1-score" type="number" class="quizz-textinput b4 quizz-input-score" placeholder="Score" name="score"><input id="group-`+groupNum+`-question-1" type="text" class="quizz-textinput b4 quizz-input-question" placeholder="Question Text1" name="question"><input id="group-`+groupNum+`-question-1-time" type="number" class="quizz-textinput b4 quizz-input-score" placeholder="Time[s]" name="time"><button id="qroup-`+groupNum+`-button" class="quizz-question-add" value="`+groupNum+` 1" onclick="addQuestion(this)">Add Question</button>
+            `
+            document.getElementById("quizz-form").insertBefore(container, element)
+            element.value = groupNum
+        }
+
+        function createQuizz(){
+            name = document.getElementById("quizzName").value
+            questions = []
+            groups = document.getElementsByClassName("question-group-container")
+            for(let i = 0; i < groups.length; i++){
+                element = groups[i].firstChild
+                let groupName
+                let score
+                let question
+                while(element != null && element != undefined){
+                    if(element.name == "group-name"){
+                        groupName = element.value
+                    }else if(element.name == "score"){
+                        score = element.value
+                    }else if(element.name == "question"){
+                        question = element.value
+                    }else if(element.name == "time"){
+                        questions.push({"score": score, "qtext": question, "qgroup": groupName, "qanswer": "answer", "time": element.value})
+                    }
+                    element = element.nextSibling
+                }
+            }
+            data = {"quizz": {"name": name}, "questions": questions}
+
+            console.log(data)
+            data = (JSON.stringify(data, (key, value) => {
+                        if (!isNaN(value))
+                            value = Number(value)
+                        return value
+                    }))
+
+            console.log(data)
+            fetch(document.getElementById("link1").innerHTML, { //'http://localhost:8888/api/quizz/'
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(response => window.location.href = document.getElementById("link2").innerHTML) //"http://127.0.0.1:8888/home.html"
+        }
+    </script>
+</body>
+</html>

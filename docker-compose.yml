@@ -1,0 +1,18 @@
+version: "3"
+services:
+  pg:
+    image: postgres
+    container_name: pg
+    environment:
+      - POSTGRES_PASSWORD=123456
+    ports:
+      - 5433:5432
+  server:
+    build: .
+    cpu_shares: 100
+    mem_limit: 262144000
+    command: go run main.go
+    links:
+      - pg
+    ports:
+      - 8888:80

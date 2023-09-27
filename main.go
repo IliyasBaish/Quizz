@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/IliyasBaish/Quizz/config"
 	"github.com/IliyasBaish/Quizz/database"
 	db_interface "github.com/IliyasBaish/Quizz/internal/database"
 	handlerUtils "github.com/IliyasBaish/Quizz/internal/handlers/utils"
@@ -15,6 +16,7 @@ import (
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/template/html/v2"
 )
 
 /*var RoomHub = ws.Hub{
@@ -27,7 +29,11 @@ import (
 var rooms = make(map[int]*ws.Room)
 
 func main() {
-	app := fiber.New()
+	engine := html.New("./internal/public", ".html")
+
+	app := fiber.New(fiber.Config{
+		Views: engine,
+	})
 
 	app.Use(cors.New())
 
@@ -187,5 +193,40 @@ func main() {
 
 	router.SetupRoutes(app)
 
-	app.Listen(":3000")
+	addr := config.Config(("ADDR"))
+	app.Get("/home", func(c *fiber.Ctx) error {
+		// Render index
+		return c.Render("home", fiber.Map{
+			"link1": "http://" + addr + "/admin",
+			"link2": "http://" + addr + "/room",
+			"link3": "http://" + addr + "/create",
+		})
+	})
+
+	app.Get("/room", func(c *fiber.Ctx) error {
+		// Render index
+		return c.Render("index", fiber.Map{
+			"link1": "ws://" + addr + "/ws/",
+			"link2": "http://" + addr + "/home",
+		})
+	})
+
+	app.Get("/create", func(c *fiber.Ctx) error {
+		// Render index
+		return c.Render("createquizz", fiber.Map{
+			"link1": "http://" + addr + "/api/quizz/",
+			"link2": "http://" + addr + "/home",
+		})
+	})
+
+	app.Get("/admin", func(c *fiber.Ctx) error {
+		// Render index
+		return c.Render("createroom", fiber.Map{
+			"link1": "http://" + addr + "/api/quizz/all",
+			"link2": "ws://" + addr + "/ws/admin/",
+			"link3": "http://" + addr + "/home",
+		})
+	})
+
+	app.Listen(":80")
 }

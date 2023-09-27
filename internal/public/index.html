@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>NIScrabble</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body class="b3">
+	<div>
+		<div id="roomenter" style="display: inline;">
+            <p class="t5" style="font-size: 50px; margin-top: 120px; margin-bottom: 150px;">
+                New Game?! ;)
+            </p>
+            <div>
+				<form onsubmit="event.preventDefault(); connectRoom()">
+					<p class="t5" style="font-size: 50px;" for="textinput">Enter room code:</p>
+					<input type="number" id="roomCode" class="textinput" name="roomname" class="b4" style="margin-top: 20px;"/>
+				</form>
+			</div>
+        </div>
+		<div id="nameenter" style="display: none;">
+            <p class="t5" id="topHeading" style="font-size: 50px; margin-top: 120px; margin-bottom: 50px;">
+            </p>
+            <div>
+				<form onsubmit="event.preventDefault(); sendName()">
+					<p class="t5" style="font-size: 50px;" for="textinput">Enter team name:</p>
+					<input type="text" id="teamName" class="textinput" name="roomname" class="b4" style="margin-top: 20px;"/>
+				</form>
+			</div>
+        </div>
+		<div id="lobby" style="display: none;">
+            <p class="t5" id="lobbyTopHeading" style="font-size: 50px; margin-top: 120px; margin-bottom: 50px;">Quizz:</p>
+            <p class="t5 bottom-btn" id="next-btn-question">Wating for Start</p>
+            <div id="teamlist">
+            </div>
+        </div>
+        <div id="question-section" style="display: none;">
+            <div class="client-question-continer">
+                <p class="client-question-header" id="client-question-header-1">Question:</p>
+                <p class="clinet-question-text" id="clinet-question-text-1">What is 3+3?</p>
+            </div>
+            <div class="client-answer-conatainer">
+                <p class="client-answer-header">Answer:</p>
+                <div>
+                    <input class="clinet-question-input" id="clinet-question-input-1" placeholder="Type here"/>
+                </div>
+            </div>
+            <div><button class="t5 answer-next" id="answer-btn-question" onclick="sendAnswer()">Send</button></div>
+        </div>
+        <div id="waiting-section" style="display: none;";>
+            <div style="position: absolute;
+                        top:50%;
+                        left: 50%;
+                        transform: translate(-50% , -50%)">
+                <p class="t2" style="font-size: 50px;">
+                    Waiting for others...
+                </p>
+            </div>
+	    </div>
+        <div id="score-continer" style="display: none;">
+            <p class="t5" id="score-header" style="font-size: 50px; margin-top: 80px; margin-bottom: 50px;">Your Score: </p>
+            <div id="score-container-team">
+            </div>
+        </div>
+        <div id="total-score-continer" style="display: none;">
+            <p class="t5" id="total-score-header" style="font-size: 50px; margin-top: 80px; margin-bottom: 50px;">Congratulations, Your Place:</p>
+            <div id="total-score-container-team">
+                
+            </div>
+            <div><button class="t5 bottom-btn" id="next-btn-score" onclick="endGame()">Leave Quizz</button></div>
+        </div>
+        <div id="link1" style="display: none;">{{.link1}}</div> 
+        <div id="link2" style="display: none;">{{.link2}}</div>
+	</div>
+
+	<script>
+
+        // "ws://127.0.0.1:8888/ws/"
+        let roomCode
+		let socket
+        let currentStage
+        let teams
+        let teamName
+        let teamCode
+        let questionNum
+        let question
+        let time
+        let right
+        let y
+        let score
+
+        function ServeWebSocket(event){
+            data = JSON.parse(event.data)
+            switch(currentStage){
+                case 1:
+                    if(data.command == 0){
+                        roomCode = data.roomCode
+                    }
+                case 2:
+                    if(data.command == 1){
+                        teamName = data.teamName
+                        teamCode = data.teamCode
+                        currentStage = 3
+                        socket.send("getteams")
+                    }
+                    break
+                case 3:
+                    if(data.command == 2){
+                        teams = data.teams
+                        printTeams()
+                        startLobby()
+                    }else if(data.command == 1){
+                        addTeam(data.teamName, data.teamCode)
+                    }else if(data.command == 3){
+                        questionNum = data.questionNumber
+                        question = data.question
+                        time = question.Time
+                        startQuestion()
+                    }else if(data.command == 4){
+                        right = data.right
+                    }else if(data.command == 5){
+                        teams = data.teams
+                        score = data.teamScore
+                        document.getElementById("waiting-section").style.display = "none"
+                        document.getElementById("score-continer").style.display = "inline"
+                        printTeamsScore()
+                    }else if(data.command == 6){
+                        question = data.question
+                        console.log(question)
+                        time = data.question.time
+                        startQuestion()
+                    }else if(data.command == 7){
+                        teams = data.teams
+                        score = data.teamScore
+                        printFinalScore()
+                    }else if(data.command == 8){
+                        endGame()
+                    }
+            }
+        }
+
+        function startLobby(){
+            clearScreen()
+			document.getElementById("lobby").style.display = "inline"
+			document.getElementById("lobbyTopHeading").innerHTML = "Room: " + roomCode + ", Team: " + teamName
+        }
+
+        function printTeams(){
+            document.getElementById("teamlist").innerHTML = ""
+            for(let i = 0; i< teams.length; i++){
+                if(teams[i].Name != ""){
+                    addTeam(data.teams[i].Name)
+                }
+            }
+        }
+
+        function printTeamsScore(){
+            clearScreen()
+            document.getElementById("score-continer").style.display = "inline"
+            if(right){
+                document.getElementById("score-header").innerHTML = "Right!, Your Score:"+score
+            }else{
+                document.getElementById("score-header").innerHTML = "Incorrect :(, Your Score:"+score
+            }
+            
+            document.getElementById("score-container-team").innerHTML = ""
+            for(let i = 0; i < teams.length; i++){
+                if(teams[i].Name != ""){
+                    element = `
+                        <div class="b4 textinput team-score-container">
+                            <div class="team-score-left">`+teams[i].Name+`</div>
+                            <div class="team-score-right"><p style="margin: 0; padding: 0;">`+teams[i].Score+`</p></div>
+                        </div>
+                    `
+                    document.getElementById("score-container-team").innerHTML += element
+                }
+            }
+        }
+
+        function printFinalScore(){
+            clearScreen()
+            document.getElementById("total-score-continer").style.display = "inline"
+            document.getElementById("total-score-header").innerHTML = "Congratulations! Your score: "+score
+            document.getElementById("total-score-container-team").innerHTML = ""
+            for(let i = 0; i < teams.length; i++){
+                if(teams[i].Name != ""){
+                    element = `
+                        <div class="b4 textinput team-score-container">
+                            <div class="team-score-left">`+teams[i].Name+`</div>
+                            <div class="team-score-right"><p style="margin: 0; padding: 0;">`+teams[i].Score+`</p></div>
+                        </div>
+                    `
+                    document.getElementById("total-score-container-team").innerHTML += element
+                }
+            }
+        }
+
+        function addTeam(name){
+            document.getElementById("teamlist").innerHTML += "<input type=\"text\" class=\"textinput\" readonly=\"readonly\" name=\"roomname\" class=\"b4\" style=\"margin-top: 20px;\" value=\"" + name + "\"/>"
+        }
+
+        function startQuestion(){
+            clearScreen()
+            document.getElementById("question-section").style.display = "inline"
+            document.getElementById("clinet-question-input-1").value = ""
+            document.getElementById("clinet-question-input-1").readOnly = false;    
+            document.getElementById("client-question-header-1").innerHTML = "Question"
+            document.getElementById("clinet-question-text-1").innerHTML = question.qtext
+            startTimerQuestion()
+        }
+
+        function connectRoom(){
+            roomCode = document.getElementById("roomCode").value
+            console.log(roomCode)
+
+            socket = new WebSocket(document.getElementById("link1").innerHTML+roomCode);
+
+            socket.onopen = function(e) {
+                document.getElementById("roomenter").style.display = "none"
+                document.getElementById("nameenter").style.display = "inline"
+                document.getElementById("topHeading").innerHTML = "Room " + String(roomCode) + " connected"
+            };
+
+            socket.onmessage = ServeWebSocket
+
+            socket.onclose = function(event) {
+            if (event.wasClean) {
+                console.log(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+            } else {
+                // например, сервер убил процесс или сеть недоступна
+                // обычно в этом случае event.code 1006
+                alert('[close] Соединение прервано');
+            }
+            };
+
+            socket.onerror = function(error) {
+            alert(`[error]`);
+            };
+            document.getElementById("roomCode").value = ""
+        }
+
+		function sendName() {
+            currentStage = 2
+			name = document.getElementById("teamName").value
+			socket.send("0 "+name)
+		} 
+
+        function sendAnswer() {
+            clearScreen()
+            document.getElementById("waiting-section").style.display = "inline"
+            socket.send("1 " + document.getElementById("clinet-question-input-1").value + " " + question.ID)
+            clearInterval(y)
+        }
+
+        function startTimerQuestion() {
+            timer = document.getElementById("client-question-header-1")
+            timer.innerHTML = "Question"
+            y = setInterval(function(){
+                time -= 1;
+                if(time <= 0 ){
+                    //socket.send("stop")
+                    sendAnswer()
+                    timer.innerHTML = "Question "+(questionNum+1) + ": Time is Over"
+                    document.getElementById("clinet-question-input-1").readOnly = true
+                    ///sendAnswer()
+                    clearInterval(y)
+                }else{
+                    timer.innerHTML = "Question: " + time + "s Left"
+
+                }
+            }, 1000)
+        }
+
+        function endGame(){
+            socket.close()
+            clearScreen()
+            defaultValues()
+            document.getElementById("roomenter").style.display = "inline"
+            window.location.href = document.getElementById("link2").innerHTML //"http://127.0.0.1:8888/home.html"
+        }
+
+        function clearScreen(){
+            document.getElementById("roomenter").style.display = "none"
+            document.getElementById("nameenter").style.display = "none"
+            document.getElementById("lobby").style.display = "none"
+            document.getElementById("question-section").style.display = "none"
+            document.getElementById("waiting-section").style.display = "none"
+            document.getElementById("score-continer").style.display = "none"
+            document.getElementById("total-score-continer").style.display = "none"
+        }
+
+        function defaultValues(){
+            currentStage = 1
+            roomCode = null
+            socket = null
+            currentStage = null
+            teams = null
+            teamName = null
+            teamCode = null
+            questionNum = null
+            question = null
+            time = null
+            right = null
+            y = null
+            score = null
+        }
+
+    </script>
+</body>
+</html>

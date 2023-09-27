@@ -15,6 +15,7 @@ func SetupRoutes(app *fiber.App) {
 	quizzRoutes.SetupQuizzRoutes(api)
 	//teamRoutes.SetupTeamRoutes(api)
 	//roomRoutes.SetupRoomRoutes(api)
+	app.Static("/", "./internal/public")
 
 	ws := app.Group("/ws")
 

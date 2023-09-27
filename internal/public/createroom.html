@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>NIScrabble</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body class="b3">
+	<div>
+        <div id="quizzenter" style="display: inline;">
+            <p class="t5" style="font-size: 50px; margin-top: 120px; margin-bottom: 40px;">
+                Create Room
+            </p>
+            <div id="quizzes-container">
+            </div>
+        </div>
+		<div id="lobby" style="display: none;">
+            <p class="t5" id="roomcode" style="font-size: 50px; margin-top: 80px; margin-bottom: 50px;">
+                Room code: 
+            </p>
+            <div id="teamlist">
+            </div>
+            <div><button class="t5" id="start-btn" onclick="startGame()">Start</button></div>
+        </div>
+        <div id="lobby2" style="display: none;">
+            <p class="t5" id="roomcode" style="font-size: 50px; margin-top: 80px; margin-bottom: 50px;">
+                Room code: 
+            </p>
+            <table id="question-table">
+                
+            </table>
+            <div><button class="t5 bottom-btn" id="end-game-btn" onclick="finalScreen()">End the Game</button></div>
+        </div>
+        <div id="question-continer" style="display: none;">
+            <p class="t5" id="question-header" style="font-size: 50px; margin-top: 80px; margin-bottom: 50px;">Question</p>
+            <p class="t5" id="question-mode">Active: </p>
+            <div><button class="t5 bottom-btn" id="next-btn-question" style="visibility: hidden;" onclick="nextQuestion()">Next</button></div>
+            <div id="answers"></div>
+        </div>
+        <div id="score-container" style="display: none;">
+            <p class="t5" id="score-header" style="font-size: 50px; margin-top: 80px; margin-bottom: 50px;">Team Score</p>
+            <div id="score-container-team">
+            </div>
+            <div><button class="t5 bottom-btn" id="next-btn-score" style="visibility: visible;" onclick="showLobbby()">Next</button></div>
+        </div>
+        <div id="total-score-container" style="display: none;">
+            <p class="t5" id="score-header" style="font-size: 50px; margin-top: 80px; margin-bottom: 50px;">Quizz Results:</p>
+            <div id="total-score-container-team">
+            </div>
+            <div><button class="t5 bottom-btn" id="next-btn-score" onclick="endGame()">End</button></div>
+        </div>
+        <div id="link1" style="display: none;">{{.link1}}</div>
+        <div id="link2" style="display: none;">{{.link2}}</div>
+        <div id="link3" style="display: none;">{{.link3}}</div>
+	</div>
+
+    <script>
+        let roomCode
+        let time = 10
+        let currentStage = 1
+        let questionNumber = 0
+        let question
+        let teams
+        let socket
+        let answer
+
+        let data
+
+        function getQuizzs(){
+            fetch(document.getElementById("link1").innerHTML) //"http://127.0.0.1:8888/api/quizz/all"
+                    .then((response) => response.json())
+                    .then((json) => {data = json; showQuizzs()});
+        }
+
+        function showQuizzs(){
+            container = document.getElementById("quizzes-container")
+            for(let i = 0; i < data.quizzes.length; i++){
+                container.innerHTML += 
+                    `
+                        <button class="quizz-btn" onclick="connectRoom(this)" value="`+data.quizzes[i].ID+`">`+data.quizzes[i].name+`</button>
+                    `
+            }
+        }
+
+        getQuizzs()
+
+        function ServeSocket(event){
+            data = JSON.parse(event.data)
+            switch(currentStage){
+                case 1:
+                    if(data.command == 0){
+                        roomCode = data.code
+                        startLobby()
+                    }
+                    break
+                case 2:
+                    if(data.command == 1){
+                        addTeam(data.teamName, data.teamCode)
+                    }
+                    break
+                case 3:
+                    if(data.command == 2){
+                        time = data.question.Time
+                        questionNumber = data.questionNumber
+                        question = data.question
+                        startQuestion()
+                    }
+                    else if(data.command == 3){
+                        console.log("addanswer: ", data.answer)
+                        addAnswer(data.answer.AnswerText, data.teamCode)
+                        console.log(data.answer)
+                    }
+                    else if(data.command == 5){
+                        teams = data.teams
+                        console.log(teams)
+                    }else if(data.command == 6){
+                        console.log(data.teams)
+                        endGame()
+                    }else if(data.command == 10){
+                        console.log(data.questions)
+                        printQuestions(data.questions)
+                    }else if(data.command == 11){
+                        question = data.question
+                        time = data.question.time
+                        startQuestion()
+                    }
+                case 4:
+                    if(data.command == 7){
+                        teams = data.teams
+                        console.log(teams)
+                        showScore("score-container")
+                    }
+                case 5:
+                    if(data.command == 12){
+                        teams = data.teams
+                        showScore("total-score-container")
+                    }else if(data.command == 13){
+                        endConfirm()
+                    }
+            }
+        }
+
+        function startLobby(){
+            currentStage = 2
+            document.getElementById("roomcode").innerHTML += roomCode
+        }
+
+        function showLobbby(){
+            clearScreen()
+            document.getElementById("lobby2").style.display = "inline"
+            currentStage = 3
+        }
+
+        function addTeam(name){
+            document.getElementById("teamlist").innerHTML += "<input type=\"text\" class=\"textinput\" readonly=\"readonly\" name=\"roomname\" class=\"b4\" style=\"margin-top: 20px;\" value=\"" + name + "\"/>"
+        }
+
+        function addAnswer(answer, teamCode){
+            element = `
+                <div class="answer-container">
+                    <input id="answer`+ teamCode +`" type="text" class="answerbox" class="b5" placeholder="`+answer+`" style="margin-top: 20px;" readonly/>
+                    <button class="button rate-button" id="mark-negative-`+ teamCode +`" name="mark" value="`+ teamCode +`" onclick="rateQuestion(this, 0)">&#128078</button>
+                    <button class="button rate-button" id="mark-positive-`+ teamCode +`" name="mark" value="`+ teamCode +`" onclick="rateQuestion(this, 1)"">&#128077</button>
+                </div>
+            `
+            document.getElementById("answers").innerHTML += element
+        }
+
+        function connectRoom(element){
+            quizzId = parseInt(element.value)
+            console.log(quizzId)
+
+            socket = new WebSocket(document.getElementById("link2").innerHTML+quizzId); //"ws://127.0.0.1:8888/ws/admin/"
+
+            socket.onopen = function(e) {
+                clearScreen()
+                document.getElementById("lobby").style.display = "inline"
+                socket.send("code")
+            };
+
+            socket.onmessage = ServeSocket
+
+            socket.onclose = function(event) {
+            if (event.wasClean) {
+                console.log(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+            } else {
+                // например, сервер убил процесс или сеть недоступна
+                // обычно в этом случае event.code 1006
+                alert('[close] Соединение прервано');
+            }
+            };
+
+            socket.onerror = function(error) {
+            alert(`[error]`);
+            };
+            document.getElementById("quizzID").value = ""
+        }
+
+        function startGame() {
+            currentStage = 3
+            socket.send("questions")
+        }
+
+        function endGame() {
+            clearScreen()
+            currentStage = 5
+            socket.send("5")
+        }
+
+        function startQuestion() {
+            clearScreen()
+            document.getElementById("question-continer").style.display = "inline"
+            document.getElementById("question-header").innerHTML = "Question " + String(questionNumber+1) + ": " + question.qtext
+            startTimerQuestion()
+        }
+
+        function startTimerQuestion() {
+            document.getElementById("next-btn-question").style.visibility = "hidden"
+            timer = document.getElementById("question-mode")
+            timer.innerHTML = "Active: " + time
+            var x = setInterval(function(){
+                time -= 1
+                console.log(time)
+                if(time <= 0 ){
+                    //socket.send("stop")                 
+                    timer.innerHTML = "Time is over" 
+                    document.getElementById("next-btn-question").style.visibility = "visible"
+                    clearInterval(x)
+                }else{
+                    timer.innerHTML = "Active: " + time
+                }
+            }, 1000)
+        }
+
+        function nextQuestion(){
+            currentStage = 4
+            socket.send("score")
+            document.getElementById("answers").innerHTML = ""
+        }
+
+        function showScore(screen){
+            clearScreen()   
+            document.getElementById(screen).style.display = "inline"
+            document.getElementById(screen+"-team").innerHTML = ""
+            for(let i = 0; i < teams.length; i++){
+                if(teams[i].Name != ""){
+                    element = `
+                        <div class="b4 textinput team-score-container">
+                            <div class="team-score-left">`+teams[i].Name+`</div>
+                            <div class="team-score-right"><p style="margin: 0; padding: 0;">`+teams[i].Score+`</p></div>
+                        </div>
+                    `
+                    document.getElementById(screen+"-team").innerHTML += element
+                }
+            }
+        }
+
+        function rateQuestion(element, right){
+            socket.send("1 "+element.value+" "+right+" "+question.ID)
+            if(right){
+                document.getElementById("answer"+element.value).style.backgroundColor = "green"
+            }else{
+                document.getElementById("answer"+element.value).style.backgroundColor = "red"
+            }
+            document.getElementById("mark-negative-"+element.value).disabled = true
+            document.getElementById("mark-positive-"+element.value).disabled = true
+        }
+
+        function printQuestions(questions){
+            data = {}
+            for(let i = 0; i < questions.length; i++){
+                if(data[questions[i].qgroup] == undefined){
+                    data[questions[i].qgroup] = []
+                }
+                data[questions[i].qgroup].push(questions[i])
+            }
+            console.log(data)
+            for(const key in data){
+                data[key].sort((a, b) => {
+                    return a.Score - b.Score
+                });
+            }
+            console.log(data)
+
+            element = ``
+            for(const key in data){
+                element += "<tr>"
+                element += "<td>"+key+"</td>"
+                for(const val in data[key]){
+                    element += '<td><button value="'+data[key][val].ID+'" onclick="getQuestion(this)">'+data[key][val].score+'</button></td>'
+                }
+                element += "</tr>"
+            }
+            document.getElementById("question-table").innerHTML = element
+            clearScreen()
+            document.getElementById("lobby2").style.display = "inline"
+        }
+
+        function getQuestion(element){
+            element.disabled = "true"
+            element.style.backgroundColor = "white"
+            socket.send("2 "+element.value)
+            console.log(currentStage)
+        }
+
+        function lobbyEndGame(){
+            currentStage = 5
+            socket.send("3")
+        }
+
+        function finalScreen(){
+            clearScreen()
+            document.getElementById("total-score-container").style.display = "inline"
+            currentStage = 5
+            socket.send("3")
+        }
+
+        function endConfirm(){
+            socket.close()
+            clearScreen()
+            document.getElementById("quizzenter").style.display = "inline"
+            window.location.href = document.getElementById("link3").innerHTML //"http://127.0.0.1:8888/home.html"
+        }
+
+        function clearScreen(){
+            document.getElementById("quizzenter").style.display = "none"
+            document.getElementById("lobby").style.display = "none"
+            document.getElementById("lobby2").style.display = "none"
+            document.getElementById("question-continer").style.display = "none"
+            document.getElementById("score-container").style.display = "none"
+            document.getElementById("total-score-container").style.display = "none"
+        }
+        
+    </script>
+</body>
+</html>
