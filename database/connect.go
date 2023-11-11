@@ -11,10 +11,13 @@ import (
 	"gorm.io/gorm"
 )
 
+//interface for Postgress
 var DB *gorm.DB
 
 func ConnectDB() {
 	var err error
+
+	//parsing settings data from .env file
 	p := config.Config(("DB_PORT"))
 	port, err := strconv.ParseUint(p, 10, 32)
 
@@ -22,6 +25,7 @@ func ConnectDB() {
 		log.Println("cannot parse DB port")
 	}
 
+	//connection to Postgress database
 	dsn := fmt.Sprintf("host=%s, port=%d user=%s password=%s dbname=%s sslmode=disable", config.Config("DB_HOST"), port, config.Config("DB_USER"), config.Config("DB_PASSWORD"), config.Config("DB_NAME"))
 	DB, err = gorm.Open(postgres.Open(dsn))
 
@@ -31,12 +35,9 @@ func ConnectDB() {
 
 	fmt.Println("Connection to DB: Success")
 
+	//migrate tables of dtatbase
 	DB.AutoMigrate(&model.Question{})
 	DB.AutoMigrate(&model.Quizz{})
-	/*
-		DB.AutoMigrate(&model.Room{})
-		DB.AutoMigrate(&model.Team{})
-		DB.AutoMigrate(&model.Answer{})
-	*/
+	
 	fmt.Println("DB Migrated")
 }
