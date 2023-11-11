@@ -11,12 +11,16 @@ import (
 func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api", logger.New())
 
+	//setup question routes
 	questionRoutes.SetupQuestionRoutes(api)
+	
+	//setup quizz routes
 	quizzRoutes.SetupQuizzRoutes(api)
-	//teamRoutes.SetupTeamRoutes(api)
-	//roomRoutes.SetupRoomRoutes(api)
+
+	//serve public files
 	app.Static("/", "./internal/public")
 
+	//setub websocket routes
 	ws := app.Group("/ws")
 
 	websocketRoutes.SetupWebsoket(ws)
