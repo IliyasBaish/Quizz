@@ -19,26 +19,24 @@ import (
 	"github.com/gofiber/template/html/v2"
 )
 
-/*var RoomHub = ws.Hub{
-	Clients:    make(map[*websocket.Conn]*ws.Client),
-	Register:   make(chan *websocket.Conn),
-	Broadcast:  make(chan string),
-	Unregister: make(chan *websocket.Conn),
-}*/
-
-var rooms = make(map[int]*ws.Room)
+var rooms = make(map[int]*ws.Room) //all rooms of server
 
 func main() {
+	//engne for handling public static files
 	engine := html.New("./internal/public", ".html")
 
+	//creatig fiber server
 	app := fiber.New(fiber.Config{
 		Views: engine,
 	})
 
+	//middleware for allowing Cross-Origin Resource Sharing (redirecting user)
 	app.Use(cors.New())
 
+	//connect to Postgress
 	database.ConnectDB()
 
+	//serve user websocket connection
 	app.Get("/ws/:roomCode", websocket.New(func(c *websocket.Conn) {
 		roomCode, err := strconv.Atoi(c.Params("roomCode"))
 		if err != nil {
@@ -110,6 +108,7 @@ func main() {
 		}
 	}))
 
+	//serve admin/organizer websocket connection
 	app.Get("/ws/admin/:quizzId", websocket.New(func(c *websocket.Conn) {
 		quizzID, err := strconv.Atoi(c.Params("quizzId"))
 		if err != nil {
@@ -191,9 +190,13 @@ func main() {
 		}
 	}))
 
+	//setup API routes for working with qizzes
 	router.SetupRoutes(app)
 
+	//setup routes for static public files
 	addr := config.Config(("ADDR"))
+
+	//setup home page
 	app.Get("/home", func(c *fiber.Ctx) error {
 		// Render index
 		return c.Render("home", fiber.Map{
@@ -203,6 +206,7 @@ func main() {
 		})
 	})
 
+	//setuop room page(for user)
 	app.Get("/room", func(c *fiber.Ctx) error {
 		// Render index
 		return c.Render("index", fiber.Map{
@@ -211,6 +215,7 @@ func main() {
 		})
 	})
 
+	//setup page for creating articles
 	app.Get("/create", func(c *fiber.Ctx) error {
 		// Render index
 		return c.Render("createquizz", fiber.Map{
@@ -219,6 +224,7 @@ func main() {
 		})
 	})
 
+	//setup room page(for admin)
 	app.Get("/admin", func(c *fiber.Ctx) error {
 		// Render index
 		return c.Render("createroom", fiber.Map{
@@ -228,5 +234,6 @@ func main() {
 		})
 	})
 
+	//listen connections on port 80
 	app.Listen(":80")
 }
