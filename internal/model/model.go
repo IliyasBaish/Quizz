@@ -13,6 +13,7 @@ type Question struct {
 	Time    int    `json:"time"`
 	Score   int    `json:"score"`
 	QGroup  string `json:"qgroup"`
+	File    string `json:"file"`
 }
 
 type Quizz struct {

@@ -69,3 +69,12 @@ func GetQuizzs(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"status": "success", "quizzes": *data})
 }
+
+func CreateQuestion(c *fiber.Ctx) error {
+	return c.Render("create_question", fiber.Map{
+		"link1":   "http://127.0.0.1:80/api/question/create",
+		"quizzID": c.AllParams()["quizzID"],
+		"group1":  c.Query("group1"),
+		"group2":  c.Query("group2"),
+	})
+}

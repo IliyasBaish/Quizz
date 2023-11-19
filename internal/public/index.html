@@ -36,9 +36,16 @@
             </div>
         </div>
         <div id="question-section" style="display: none;">
-            <div class="client-question-continer">
+            <div class="client-question-continer" style="background-color: #62b6cb;
+            width: 80%;
+            height: auto;
+            border-radius: 250px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;">
                 <p class="client-question-header" id="client-question-header-1">Question:</p>
-                <p class="clinet-question-text" id="clinet-question-text-1">What is 3+3?</p>
+                <img id="question-image" style="max-width: 80%; height: auto; max-height: 40vh; text-align-last: center;" src="">
+                <p class="clinet-question-text" id="clinet-question-text-1" style="padding-bottom: 30px;">What is 3+3?</p>
             </div>
             <div class="client-answer-conatainer">
                 <p class="client-answer-header">Answer:</p>
@@ -89,6 +96,7 @@
         let right
         let y
         let score
+        let file
 
         function ServeWebSocket(event){
             data = JSON.parse(event.data)
@@ -113,9 +121,11 @@
                     }else if(data.command == 1){
                         addTeam(data.teamName, data.teamCode)
                     }else if(data.command == 3){
+                        console.log(question)
                         questionNum = data.questionNumber
                         question = data.question
                         time = question.Time
+                        file = question.File
                         startQuestion()
                     }else if(data.command == 4){
                         right = data.right
@@ -207,6 +217,11 @@
             document.getElementById("clinet-question-input-1").readOnly = false;    
             document.getElementById("client-question-header-1").innerHTML = "Question"
             document.getElementById("clinet-question-text-1").innerHTML = question.qtext
+            if(file == ""){
+                document.getElementById("question-image").src = ""
+            }else{
+                document.getElementById("question-image").src = "http://127.0.0.1/images/" + question.file
+            }  
             startTimerQuestion()
         }
 

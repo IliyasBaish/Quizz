@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Erudit-Plus</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body class="b3">
+	<div>
+        <div id="lobby2">
+            <p class="t5" id="roomcode" style="font-size: 50px; margin-top: 80px; margin-bottom: 50px;">
+                Quizz name
+            </p>
+            <table id="question-table">
+                <tr>
+                    <th></th>
+                    <th>One</th>
+                    <th>Two</th>
+                </tr>
+                <tr>
+                    <td>One</td>
+                    <td><button value="one one" onclick="addQuestion(this)">ADD</button></td>
+                    <td><button value="one two" onclick="addQuestion(this)">ADD</button></td>
+                </tr>
+                <tr>
+                    <td>Two</td>
+                    <td><button value="two one" onclick="addQuestion(this)">ADD</button></td>
+                    <td><button value="two two" onclick="addQuestion(this)">ADD</button></td>
+                </tr>
+            </table>
+            <input type="hidden" value="1" id="quizzID">
+            <div id="link1" style="display: none;">http://127.0.0.1:80/api/quizz/create/question</div>
+            <div><button class="t5" id="end-game-btn" onclick="finalScreen()">End the Game</button></div>
+        </div>
+	</div>
+
+    <script>
+        function addQuestion(el){
+            data = el.value.split(" ")
+            group1 = data[0]
+            group2 = data[1]
+            quizzID = document.getElementById("quizzID").value
+            window.location.href = document.getElementById("link1").innerHTML + "/" + quizzID + "?group1=" + group1 + "&group2=" + group2
+        }
+    </script>
+</body>
+</html>

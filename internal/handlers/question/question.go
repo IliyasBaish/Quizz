@@ -75,7 +75,7 @@ func CreateQuestion(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot parse question", "data": err})
 	}
 
-	question, err = db_interface.CreateQuestion(question.QuizzID, question.QText, question.QAnswer, question.Time, question.Score, question.QGroup)
+	question, err = db_interface.CreateQuestion(question.QuizzID, question.QText, question.QAnswer, question.Time, question.Score, question.QGroup, question.File)
 
 	return c.JSON(fiber.Map{"status": "success", "message": "Question Created", "data": question})
 }

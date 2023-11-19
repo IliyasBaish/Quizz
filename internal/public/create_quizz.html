@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erudit-Plus</title>
+	<link rel="stylesheet" type="text/css" href="http://127.0.0.1/style.css">
+</head>
+<body class="b3">
+    <div>
+        <p class="t5" style="font-size: 50px; margin-top: 70px;">Quizz</p>
+        <form onsubmit="event.preventDefault()" action="" id="quizz-form">
+            <input type="text" class="textinput" id="quizz-name" name="quizz-name" class="b4" placeholder="Enter Quizz Name" style="margin-top: 20px;"/>
+
+            <div id="group1-input">
+                <p class="t5" style="font-size: 35px; margin-top: 60px;">Question Groups</p>
+                <input type="text" class="b4 textinput group1" id="group1-1" name="group1-input-1" placeholder="Group Name" style="margin-top: 20px;"/>
+                <button class="quizz-group-add" id="group1-add" onclick="addGroup1()">Add Group</button>
+            </div>
+            
+            <div id="group2-input">
+                <p class="t5" style="font-size: 35px; margin-top: 30px;">Question Types</p>
+                <input type="text" class="b4 textinput group2" id="group2-2" name="group2-input-1" placeholder="Type Name" style="margin-top: 20px;"/>
+                <button class="quizz-group-add" id="group2-add" onclick="addGroup2()">Add Type</button>
+            </div>
+            
+            <button id="qroup-add-button" class="quizz-group-add" value="1" onclick="createQuizz()">Save Question</button>
+        </form>
+        <div id="link1" style="display: none;">{{.link1}}</div>
+        <div id="quizzID" style="display: none;">{{.quizzID}}</div>
+        <div id="group1" style="display: none;">{{.group1}}</div>
+        <div id="group2" style="display: none;">{{.group2}}</div>
+    </div>
+    <script>
+        group1_count = 1
+        group2_count = 1
+
+        function addGroup1(){
+            group1_count += 1
+
+            group = document.createElement("input")
+            group.id = "group1-" + group1_count
+            group.type = "text"
+            group.classList.add("b4")
+            group.classList.add("textinput")
+            group.classList.add("group1")     
+            group.placeholder = "Group Name"
+            group.style = "margin-top: 20px;"
+
+            document.getElementById("group1-input").insertBefore(group, document.getElementById("group1-add"))
+        }
+
+        function addGroup2(){
+            group1_count += 1
+
+            type = document.createElement("input")
+            type.id = "group2-" + group1_count
+            type.type = "text"
+            type.classList.add("b4")
+            type.classList.add("textinput")
+            type.classList.add("group2")     
+            type.placeholder = "Type Name"
+            type.style = "margin-top: 20px;"
+
+            document.getElementById("group2-input").insertBefore(type, document.getElementById("group2-add"))
+        }
+
+        function createQuizz(){
+            name = document.getElementById("quizz-name").value
+
+            groups_data = []
+            groups = document.getElementsByClassName("group1")
+            for(let i = 0; i < groups.length; i++){
+                groups_data.push(groups[i].value)
+            }
+
+            types_data = []
+            types = document.getElementsByClassName("group2")
+            for(let i = 0; i < types.length; i++){
+                types_data.push(types[i].value)
+            }
+
+            data = {"name": name, "groups": groups_data, "types": types_data}
+
+            console.log(data)
+
+            fetch(document.getElementById("link1").innerHTML, { //'http://localhost:8888/api/quizz/'
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(response => window.location.href = document.getElementById("link2").innerHTML) //"http://127.0.0.1:8888/home.html"
+        }
+    </script>
+</body>
+</html>

@@ -11,4 +11,5 @@ func SetupQuizzRoutes(router fiber.Router) {
 	quizz.Post("/", quizzHandler.CreateQuizz)
 	quizz.Post("/get", quizzHandler.GetQuizz)
 	quizz.Get("/all", quizzHandler.GetQuizzs)
+	quizz.Get("/create/question/:quizzID", quizzHandler.CreateQuestion)
 }

@@ -210,7 +210,8 @@ input[type="radio"] {
 	height: 500px;
 	border-radius: 250px;
 	margin-left: auto;
-	margin-right: auto
+	margin-right: auto;
+	text-align: center;
 }
 
 .clinet-question-text{
@@ -245,7 +246,7 @@ input[type="radio"] {
 .client-answer-conatainer{
 	background-color: #cae9ff;
 	width: 80%;
-	height: 200px;
+	height: 150px;
 	border-radius: 100px;
 	margin-bottom: 30px;
 	margin-left: auto;
@@ -437,4 +438,30 @@ input[type="radio"] {
 	font-family: "berlin_sans_fb_demibold";
 	font-size: 30px;
 	color: #1b4965;
+}
+
+.im_input {
+	color: white;
+	text-align: center;
+	display: block;
+    margin-left: auto;
+    margin-right: auto;
+	font-size: 25px;
+	border-radius: 10px;
+}
+
+.file-input{
+	width: 30%;
+	height: 40px;
+	font-size: 20px;
+	margin-top: 10px;
+	margin-left: 35%;
+	margin-right: 35%;
+}
+
+#question-image {
+	max-width: 80%;
+	height: auto;
+	max-height: 40vh;
+	text-align-last: center;
 }

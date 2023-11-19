@@ -9,21 +9,40 @@
 <body class="b3">
     <div>
         <p class="t5" style="font-size: 50px; margin-top: 80px;">Create Quiz</p>
-        <form onsubmit="event.preventDefault()" action="" id="quizz-form">
+        <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+        <form onsubmit="submitFile(this)" method="post" action="/upload" enctype="multipart/form-data" target="dummyframe">
             <input type="text" class="quizz-textinput" id="quizzName" name="roomname" class="b4" placeholder="Enter quizz name" style="margin-top: 20px;"/>
+            <input type="file" name="image" accept="image/jpeg, image/png" id="file-input">
+            <input type="submit">
+        </form>
+
+        <form onsubmit="event.preventDefault()" action="" id="quizz-form">
             <p class="t5" style="font-size: 35px; margin-top: 30px;">Questions</p>
             <div class="question-group-container" id="group-1-container">
                 <input name="group-name" id="group-1" type="text" class="quizz-textinput-group b4 quizz-input-question-group" placeholder="Questions Group 1">
                 <input id="group-1-question-1-score" type="number" class="quizz-textinput b4 quizz-input-score" placeholder="Score" name="score"><input id="group-1-question-1" type="text" class="quizz-textinput b4 quizz-input-question" placeholder="Question Text1" name="question"><input id="group-1-question-1-time" type="number" class="quizz-textinput b4 quizz-input-score" placeholder="Time[s]" name="time">
+                <input list="datalist-files" id="group-1-question-1-file" class="file-input" placeholder="ADD IMAGE" name="file"> 
                 <button id="qroup-1-button" class="quizz-question-add" value="1 1" onclick="addQuestion(this)">Add Question</button>
             </div>
             <button id="qroup-add-button" class="quizz-group-add" value="1" onclick="addGroup(this)">Add Questions Group</button>
             <button id="qroup-add-button" class="quizz-group-add" value="1" onclick="createQuizz()">Create Quizz</button>
+            <datalist id="datalist-files">
+
+            </datalist>
         </form>
         <div id="link1" style="display: none;">{{.link1}}</div>
         <div id="link2" style="display: none;">{{.link2}}</div>
     </div>
     <script>
+        files = []
+
+        function submitFile(form){
+            form.submit()
+            file = document.getElementById("file-input").value.split("\\").pop()
+            files.push(file)
+            document.getElementById("datalist-files").innerHTML += "<option>"+file+"</option>"
+        }
+
         function addQuestion(element){
             data = element.value.split(" ")
             console.log(data)
@@ -56,10 +75,17 @@
             time.placeholder = "Time[s]"
             time.name = "time"
 
+            file_input = document.createElement("input")
+            file_input.setAttribute("list", "datalist-files")
+            file_input.id="group-"+data[0]+"-question-"+questionNum+"-file"
+            file_input.classList.add("file-input")
+            file_input.placeholder = "ADD IMAGE"
+
             parent = document.getElementById("group-"+data[0]+"-container")
             parent.insertBefore(score, element)
             parent.insertBefore(question, element)
             parent.insertBefore(time, element)
+            parent.insertBefore(file_input, element)
 
             element.value = data[0]+" "+questionNum
         }
@@ -86,6 +112,8 @@
                 let groupName
                 let score
                 let question
+                let time
+                let file
                 while(element != null && element != undefined){
                     if(element.name == "group-name"){
                         groupName = element.value
@@ -94,7 +122,10 @@
                     }else if(element.name == "question"){
                         question = element.value
                     }else if(element.name == "time"){
-                        questions.push({"score": score, "qtext": question, "qgroup": groupName, "qanswer": "answer", "time": element.value})
+                        time = element.value
+                    }else if(element.name == "file"){
+                        file = element.value
+                        questions.push({"score": score, "qtext": question, "qgroup": groupName, "qanswer": "answer", "time": time, "file": name + "/" +file})
                     }
                     element = element.nextSibling
                 }

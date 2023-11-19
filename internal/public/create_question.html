@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erudit-Plus</title>
+	<link rel="stylesheet" type="text/css" href="http://127.0.0.1/style.css">
+</head>
+<body class="b3">
+    <div>
+        <p class="t5" style="font-size: 50px; margin-top: 80px;">Question</p>
+        <form onsubmit="event.preventDefault()" action="" id="quizz-form">
+            <input type="text" class="textinput" id="question_text" name="roomname" class="b4" placeholder="Enter Question" style="margin-top: 20px;"/>
+            <p class="t5" style="font-size: 35px; margin-top: 30px;">Add image</p>
+            <input type="file" id="image_input" name="image" accept="image/png, image/jpeg" class="im_input">
+            
+            <button id="qroup-add-button" class="quizz-group-add" value="1" onclick="createQuizz()">Save Question</button>
+        </form>
+        <div id="link1" style="display: none;">{{.link1}}</div>
+        <div id="quizzID" style="display: none;">{{.quizzID}}</div>
+        <div id="group1" style="display: none;">{{.group1}}</div>
+        <div id="group2" style="display: none;">{{.group2}}</div>
+    </div>
+    <script>
+        function createQuizz(){
+            question_text = document.getElementById("question_text").value
+            image = document.getElementById("image_input").files[0]
+
+            quizzID = document.getElementById("quizzID").innerHTML
+            group1 = document.getElementById("group1").innerHTML
+            group2 = document.getElementById("group2").innerHTML
+
+            data = {"quizzID": quizzID, "group1": group1, "group2": group2, "text": question_text, "image": image}
+
+            fetch(document.getElementById("link1").innerHTML, { //'http://localhost:8888/api/quizz/'
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(response => window.location.href = document.getElementById("link2").innerHTML) //"http://127.0.0.1:8888/home.html"
+        }
+    </script>
+</body>
+</html>

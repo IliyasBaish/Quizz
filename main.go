@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -234,6 +236,41 @@ func main() {
 		})
 	})
 
-	//listen connections on port 80
+	app.Get("/create_question", func(c *fiber.Ctx) error {
+		// Render index
+		return c.Render("create_question", fiber.Map{
+			"link1": "http://" + addr + "/api/quizz/",
+			"link2": "http://" + addr + "/home",
+		})
+	})
+
+	app.Post("/upload", func(c *fiber.Ctx) error {
+		name := c.FormValue("roomname")
+
+		_, err := os.Stat("internal/public/images/" + name)
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Println("file does not exist") // это_true
+				err = os.Mkdir("internal/public/images/"+name, 0777)
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				fmt.Println(err)
+			}
+		}
+
+		file, err := c.FormFile("image")
+		if err != nil {
+			return c.JSON(fiber.Map{"status": "error", "error": err})
+		}
+
+		fmt.Println(file.Header.Get("Content-Type"))
+
+		c.SaveFile(file, "internal/public/images/"+name+"/"+file.Filename)
+
+		return c.JSON(fiber.Map{"status": "success"})
+	})
+
 	app.Listen(":80")
 }
